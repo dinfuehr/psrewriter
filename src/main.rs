@@ -20,7 +20,7 @@ fn main() {
     let mut inside = false;
 
     let mut fout = BufWriter::new(File::create(Path::new(&args[2])).unwrap());
-    let mut buffer: Vec<u8> = vec![0; 4];
+    let mut buffer = [0; 4];
 
     for ch in fin.chars() {
         let ch = ch.unwrap();
