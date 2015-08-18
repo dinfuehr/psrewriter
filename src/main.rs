@@ -17,27 +17,15 @@ fn main() {
     let mut inside = false;
 
     let mut fout = BufWriter::new(File::create(Path::new(&args[2])).unwrap());
-    let mut buffer = Vec::new();
+    let mut buffer = String::new();
 
-    while fin.read_until(b'\n', &mut buffer).unwrap() != 0 {
-        let len = buffer.len();
+    while fin.read_line(&mut buffer).unwrap() > 0 {
+        let find = if inside { ">>" } else { "<<" };
 
-        if len > 1 {
-            for i in 1..len {
-                let ch = buffer[i];
-                let last = buffer[i-1];
+        if buffer.contains(find) { inside = !inside; }
+        if inside && buffer.ends_with("\n") { buffer.pop(); }
 
-                if (inside && ch == b'>' && last == b'>') || (!inside && ch == b'<' && last == b'<') {
-                    inside = !inside;
-                }
-            }
-        }
-
-        if inside && buffer[len-1] == b'\n' {
-            buffer.pop();
-        }
-
-        fout.write(&buffer).unwrap();
+        fout.write(buffer.as_bytes()).unwrap();
         buffer.clear();
     }
 }
