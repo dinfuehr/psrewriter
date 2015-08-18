@@ -1,3 +1,4 @@
+use std::io::BufRead;
 use std::io::BufReader;
 use std::io::BufWriter;
 use std::io::Read;
@@ -12,27 +13,31 @@ fn main() {
         panic!("psrewriter <in> <out>");
     }
 
-    let fin = BufReader::new(File::open(&args[1]).unwrap());
-    let mut last = ' ';
+    let mut fin = BufReader::new(File::open(&args[1]).unwrap());
     let mut inside = false;
 
     let mut fout = BufWriter::new(File::create(Path::new(&args[2])).unwrap());
+    let mut buffer = Vec::new();
 
-    for ch in fin.bytes() {
-        let ch = ch.unwrap() as char;
+    while fin.read_until(b'\n', &mut buffer).unwrap() != 0 {
+        let len = buffer.len();
 
-        if inside {
-            if ch == '\n' {
-                // ignore
-                continue;
-            } else if ch == '>' && last == '>' {
-                inside = false;
+        if len > 1 {
+            for i in 1..len {
+                let ch = buffer[i];
+                let last = buffer[i-1];
+
+                if (inside && ch == b'>' && last == b'>') || (!inside && ch == b'<' && last == b'<') {
+                    inside = !inside;
+                }
             }
-        } else if ch == '<' && last == '<' {
-            inside = true;
         }
 
-        fout.write(&[ch as u8]).unwrap();
-        last = ch;
+        if inside && buffer[len-1] == b'\n' {
+            buffer.pop();
+        }
+
+        fout.write(&buffer).unwrap();
+        buffer.clear();
     }
 }
