@@ -3,3 +3,4 @@ output.ps
 *.swp
 big_input.ps
 big_output.ps
+*.class
